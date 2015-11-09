@@ -1,0 +1,63 @@
+unit Unit2;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, LibUSB;
+
+type
+  TForm2 = class(TForm)
+    Button1: TButton;
+    Button2: TButton;
+    procedure FormCreate(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  Form2: TForm2;
+  LED_Device: pusb_device;
+  LED_Handle: pusb_dev_handle;
+  buffer: array[0..100] of byte;
+
+implementation
+
+{$R *.dfm}
+function USBFindDevice(VID, PID:word):pusb_device;
+var
+  bus: pusb_bus;
+  dev: pusb_device;
+begin
+  result := nil;
+  usb_init();
+  usb_find_busses();
+  usb_find_devices();
+  while(bus<>nil)do
+  begin
+    dev := bus.devices;
+    while(dev<>nil)do
+    begin
+      if(dev.descriptor.idVendor=VID)and(dev.descriptor.idProduct=PID)then
+        result := dev;
+      dev := dev.next;
+    end;
+    bus := bus.next;
+  end;
+end;
+
+procedure TForm2.Button1Click(Sender: TObject);
+begin
+  usb_control_msg(LED_Device,$40,1,1,1,buffer,sizeof(buffer),5000);
+end;
+
+procedure TForm2.FormCreate(Sender: TObject);
+begin
+  LED_Device := USBFindDevice(5824,1500);
+  LED_Handle := usb_open(LED_Device);
+end;
+
+end.
